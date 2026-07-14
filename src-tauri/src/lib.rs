@@ -156,7 +156,7 @@ async fn activate_license_key(
     key: String,
     db: tauri::State<'_, Arc<Mutex<Database>>>,
 ) -> Result<bool, String> {
-    if key == "pixaan_pro_test" {
+    if key == "kaptur_pro_test" {
         let db_guard = db
             .lock()
             .map_err(|e| format!("Database lock error: {}", e))?;

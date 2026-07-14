@@ -6,6 +6,7 @@ import { open } from "@tauri-apps/plugin-dialog";
 import "./App.css";
 import kapturLogo from "./assets/kaptur-logo.png";
 import { enable, isEnabled, disable } from '@tauri-apps/plugin-autostart';
+import { openUrl } from '@tauri-apps/plugin-opener';
 
 /* ── Types ──────────────────────────────────────────────── */
 import { generateProtectedBase64, startImageDrag } from "./utils/imageExport";
@@ -371,9 +372,6 @@ function ScreenshotCard({
             annotations={annotations}
             containerRef={previewRef}
           />
-        )}
-        {screenshot.ocr_status === "done" && (
-          <MarkGlyph className="watermark-glyph mark-glyph-anim" />
         )}
       </div>
 
@@ -1899,7 +1897,7 @@ function App() {
     content = (
       <div className="splash-screen">
         <div className="splash-brand-icon">
-          <img src={kapturLogo} width="64" height="64" alt="Kaptur Logo" style={{ objectFit: 'contain' }} />
+          <img src={kapturLogo} width="64" height="48" alt="Kaptur Logo" style={{ objectFit: 'contain' }} />
         </div>
         <h1 className="splash-title">Kaptur</h1>
       </div>
@@ -1910,8 +1908,8 @@ function App() {
     content = (
       <main className="container onboarding">
         <div className="onboarding-card">
-          <div className="brand-icon" style={{ borderRadius: 12, margin: "0 auto 1.25rem", background: "var(--surface-raised)" }}>
-            <MarkGlyph />
+          <div style={{ margin: "0 auto 1.25rem", display: "flex", justifyContent: "center" }}>
+            <MarkGlyph style={{ width: 64, height: 48 }} />
           </div>
           <h1>Welcome to Kaptur</h1>
           <p>Set up your screenshot folder to get started.</p>
@@ -1963,9 +1961,7 @@ function App() {
       {!isOverlay && (
         <header className="app-header">
           <div className="app-brand">
-            <div className="brand-icon">
-              <MarkGlyph style={{ width: "100%", height: "100%" }} />
-            </div>
+            <MarkGlyph style={{ width: 42, height: 32, marginRight: 2, transform: 'scale(1.2)' }} />
             <span className="brand-name">Kaptur</span>
           </div>
 
@@ -2390,6 +2386,33 @@ function App() {
                 >
                   Export Vault to Downloads
                 </button>
+              </div>
+
+              <div className="form-group" style={{ marginTop: '1rem', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
+                <label>About & Feedback</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.5rem' }}>
+                  <button
+                    className="secondary"
+                    style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}
+                    onClick={() => openUrl('https://github.com/ankitpanwar070798')}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                    </svg>
+                    Leave Feedback on GitHub
+                  </button>
+                  
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', fontSize: '0.875rem', color: 'var(--tx-muted)' }}>
+                    <span>Created by</span>
+                    <a 
+                      href="#" 
+                      onClick={(e) => { e.preventDefault(); openUrl('https://ankitpanwar.dev'); }}
+                      style={{ color: 'var(--mark)', textDecoration: 'none', fontWeight: 500 }}
+                    >
+                      Ankit Panwar
+                    </a>
+                  </div>
+                </div>
               </div>
             </div>
             <div className="dialog-footer">

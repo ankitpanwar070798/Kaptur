@@ -1,6 +1,6 @@
-# Pixaan
+# Kaptur
 
-> Pixaan — every pixel, marked and remembered.
+> Kaptur — every pixel, marked and remembered.
 
 ---
 
@@ -21,7 +21,7 @@
 
 ## Overview
 
-Pixaan is a **Tauri 2** desktop application for Windows that watches your screenshot folders, indexes every image into a local SQLite database with full-text OCR, and exposes a clean, searchable UI. Everything runs 100% locally on your machine — no cloud storage, no subscriptions, and absolute privacy.
+Kaptur is a **Tauri 2** desktop application for Windows that watches your screenshot folders, indexes every image into a local SQLite database with full-text OCR, and exposes a clean, searchable UI. Everything runs 100% locally on your machine — no cloud storage, no subscriptions, and absolute privacy.
 
 ---
 
@@ -172,7 +172,7 @@ Protected PNG written to OS temp dir (drag) or user-chosen path (save)
 
 ```powershell
 # Navigate to the project
-cd C:\Users\AnkitPanwar\Desktop\poc\Pixaan
+cd C:\Users\AnkitPanwar\Desktop\poc\Kaptur
 
 # Install npm dependencies
 npm install
@@ -195,7 +195,7 @@ npm run tauri dev
 
 ## Database Schema
 
-**Location:** `%APPDATA%\com.pixaan.app\pixaan.db`
+**Location:** `%APPDATA%\com.kaptur.app\screenshots.db`
 
 ```sql
 -- Main table
@@ -252,4 +252,4 @@ CREATE TABLE annotations (
 
 ## License
 
-Copyright © Pixaan. All Rights Reserved.
+Copyright © Kaptur. All Rights Reserved.
