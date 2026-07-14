@@ -460,7 +460,13 @@ function SensitiveBlurOverlay({
                 }
               }
             }}
-            title={isEditable ? '' : (region.match_type === 'manual' ? 'Manual blur region' : `Detected: ${region.match_type}`)}
+            onDoubleClick={(e) => {
+              if (isEditable && onDismissRegion) {
+                e.stopPropagation();
+                onDismissRegion(region.id);
+              }
+            }}
+            title={isEditable ? 'Double-click to remove' : (region.match_type === 'manual' ? 'Manual blur region' : `Detected: ${region.match_type}`)}
           >
             {/* Pixel-level image blur: duplicate the full image, offset it so the correct
                  crop is visible, clip via overflow:hidden on the parent, then apply blur.
@@ -480,19 +486,7 @@ function SensitiveBlurOverlay({
                 }}
               />
             )}
-            {/* Hover-revealed "Delete" label at the bottom — edit mode only */}
-            {isEditable && (
-              <span
-                className="region-delete-label"
-                onMouseDown={(e) => e.stopPropagation()} // don't start move
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDismissRegion?.(region.id);
-                }}
-              >
-                Delete
-              </span>
-            )}
+
             {/* Resize Handles — edit mode only */}
             {isEditable && (
               <>
@@ -1551,8 +1545,7 @@ function App() {
     const toast = document.createElement('div');
     toast.className = 'toast-undo';
     toast.innerHTML = `
-      <span>Region removed — </span>
-      <button class="toast-undo-btn">Undo</button>
+      <span>Region removed</span>
     `;
     toast.style.cssText = `
       position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
@@ -1723,6 +1716,24 @@ function App() {
       } else {
         await invoke("copy_image_to_clipboard", { path });
       }
+      
+      const toast = document.createElement('div');
+      toast.className = 'toast-copy';
+      toast.innerHTML = `<span>Copied to clipboard</span>`;
+      toast.style.cssText = `
+        position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+        background: var(--surface); color: var(--tx);
+        padding: 12px 16px; border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 10000; animation: fade-in-up 0.3s ease;
+        font-size: 0.875rem; font-weight: 500;
+        border: 1px solid var(--border);
+      `;
+      document.body.appendChild(toast);
+      setTimeout(() => {
+        toast.style.animation = 'fade-out-down 0.3s ease';
+        setTimeout(() => toast.remove(), 290);
+      }, 2000);
     } catch (e) { console.error("Copy failed:", e); }
     setContextMenu(null);
   }
@@ -1897,7 +1908,7 @@ function App() {
     content = (
       <div className="splash-screen">
         <div className="splash-brand-icon">
-          <img src={kapturLogo} width="64" height="48" alt="Kaptur Logo" style={{ objectFit: 'contain' }} />
+          <img src={kapturLogo} width="96" height="96" alt="Kaptur Logo" style={{ objectFit: 'contain' }} />
         </div>
         <h1 className="splash-title">Kaptur</h1>
       </div>
@@ -1909,7 +1920,7 @@ function App() {
       <main className="container onboarding">
         <div className="onboarding-card">
           <div style={{ margin: "0 auto 1.25rem", display: "flex", justifyContent: "center" }}>
-            <MarkGlyph style={{ width: 64, height: 48 }} />
+            <MarkGlyph style={{ width: 80, height: 80, opacity: 0.2 }} />
           </div>
           <h1>Welcome to Kaptur</h1>
           <p>Set up your screenshot folder to get started.</p>
@@ -1961,7 +1972,7 @@ function App() {
       {!isOverlay && (
         <header className="app-header">
           <div className="app-brand">
-            <MarkGlyph style={{ width: 42, height: 32, marginRight: 2, transform: 'scale(1.2)' }} />
+            <MarkGlyph style={{ width: 32, height: 32, marginRight: 8 }} />
             <span className="brand-name">Kaptur</span>
           </div>
 
