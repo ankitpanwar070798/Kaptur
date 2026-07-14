@@ -1,0 +1,143 @@
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal-content {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 2rem;
+  width: 90%;
+  max-width: 500px;
+  position: relative;
+  box-shadow: var(--sh-lg);
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: transparent;
+  border: none;
+  color: var(--tx-muted);
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: color var(--t) var(--ease);
+}
+
+.modal-close:hover {
+  color: var(--tx);
+}
+
+.upgrade-modal h2 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+  color: var(--tx);
+}
+
+.upgrade-features {
+  margin-bottom: 2rem;
+}
+
+.upgrade-features p {
+  color: var(--tx-muted);
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.upgrade-features ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.upgrade-features li {
+  margin-bottom: 0.75rem;
+  color: var(--tx);
+  line-height: 1.5;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.upgrade-features li::before {
+  content: "✨";
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.license-entry label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--tx);
+  font-weight: 500;
+}
+
+.license-input-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.license-input-group input {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  color: var(--tx);
+  outline: none;
+  transition: border-color var(--t) var(--ease);
+}
+
+.license-input-group input:focus {
+  border-color: var(--accent);
+}
+
+.activate-btn {
+  padding: 0.75rem 1.5rem;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: var(--r-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity var(--t) var(--ease);
+}
+
+.activate-btn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.activate-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.error-text {
+  color: #ef4444;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
