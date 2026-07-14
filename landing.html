@@ -3,8 +3,47 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Kaptur — Screenshot Manager for Windows</title>
-  <meta name="description" content="Kaptur watches your screenshot folder, reads every image with OCR, and makes them instantly searchable. 100% local, no cloud, no subscriptions." />
+  <title>Kaptur — Screenshot Manager & OCR Search for Windows</title>
+  <meta name="description" content="Kaptur is a privacy-first, 100% local screenshot manager for Windows. It watches your folders, extracts text via OCR, and makes every screenshot instantly searchable. No cloud uploads, no subscriptions." />
+  <meta name="keywords" content="screenshot manager, Windows OCR, local screenshot search, privacy screenshot tool, search text in images, open source screenshot app" />
+  <meta name="author" content="Ankit Panwar" />
+  <meta name="robots" content="index, follow" />
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://ankitpanwar070798.github.io/Kaptur/" />
+  <meta property="og:title" content="Kaptur — Screenshot Manager for Windows" />
+  <meta property="og:description" content="Kaptur watches your screenshot folder, reads every image with OCR, and makes them instantly searchable. 100% local, no cloud, no subscriptions." />
+  <meta property="og:image" content="https://raw.githubusercontent.com/ankitpanwar070798/Kaptur/main/public/kaptur-logo.png" />
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image" />
+  <meta property="twitter:url" content="https://ankitpanwar070798.github.io/Kaptur/" />
+  <meta property="twitter:title" content="Kaptur — Screenshot Manager for Windows" />
+  <meta property="twitter:description" content="100% local, no cloud, no subscriptions. Watch your screenshot folder, extract text via OCR, and make them instantly searchable." />
+  <meta property="twitter:image" content="https://raw.githubusercontent.com/ankitpanwar070798/Kaptur/main/public/kaptur-logo.png" />
+
+  <!-- Structured Data (JSON-LD) for AEO -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Kaptur",
+    "operatingSystem": "Windows 10, Windows 11",
+    "applicationCategory": "UtilitiesApplication",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "description": "Kaptur is a 100% local screenshot manager that uses native Windows OCR to extract text from images and make them instantly searchable, without any cloud uploads.",
+    "author": {
+      "@type": "Person",
+      "name": "Ankit Panwar",
+      "url": "https://ankitpanwar.dev"
+    }
+  }
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -125,6 +164,7 @@
 </head>
 <body>
 
+<header>
 <nav id="nav">
   <div class="nav-inner">
     <a class="nav-brand" href="#">
@@ -143,7 +183,9 @@
     </a>
   </div>
 </nav>
+</header>
 
+<main>
 <section class="hero">
   <div class="hero-glow"></div>
   <div class="hero-grid"></div>
@@ -352,6 +394,7 @@
     </div>
   </div>
 </section>
+</main>
 
 <footer>
   <div class="footer-inner">
