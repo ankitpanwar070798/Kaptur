@@ -8,6 +8,16 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-YOUR_TRACKING_ID"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-YOUR_TRACKING_ID');
+  </script>
+
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
@@ -128,7 +138,7 @@
 <nav id="nav">
   <div class="nav-inner">
     <a class="nav-brand" href="#">
-      <div class="nav-logo"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+      <img src="public/kaptur-logo.png" alt="Kaptur" style="width:32px;height:32px;object-fit:contain;border-radius:7px">
       Kaptur
     </a>
     <div class="nav-links">
@@ -137,7 +147,7 @@
       <a href="#privacy">Privacy</a>
       <a href="#download">Download</a>
     </div>
-    <a href="#download" class="btn btn-primary" style="padding:9px 18px;font-size:.85rem">
+    <a href="#download" class="btn btn-primary" style="padding:9px 18px;font-size:.85rem" onclick="gtag('event', 'download_click', { 'event_category': 'Engagement', 'event_label': 'Nav Bar Download' });">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       Download
     </a>
@@ -154,7 +164,7 @@
     <h1 class="hero-title fade-up">Your screenshots,<br/><span class="grad">finally organized.</span></h1>
     <p class="hero-sub fade-up fade-up-d1">Kaptur watches your screenshot folder, reads every image with OCR, and makes them instantly searchable &mdash; all on your machine. No cloud. No account.</p>
     <div class="hero-actions fade-up fade-up-d2">
-      <a href="#download" class="btn btn-primary btn-lg">
+      <a href="#download" class="btn btn-primary btn-lg" onclick="gtag('event', 'download_click', { 'event_category': 'Engagement', 'event_label': 'Hero Download' });">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Download for Windows
       </a>
@@ -331,7 +341,7 @@
     <h2 class="fade-up">Ready to take control<br/>of your screenshots?</h2>
     <p class="fade-up fade-up-d1">Download Kaptur for Windows. Free forever. No strings attached.</p>
     <div class="fade-up fade-up-d2">
-      <a href="https://github.com/ankitpanwar070798/Kaptur/releases/latest" target="_blank" class="btn btn-primary btn-lg">
+      <a href="https://github.com/ankitpanwar070798/Kaptur/releases/latest" target="_blank" class="btn btn-primary btn-lg" onclick="gtag('event', 'download_click', { 'event_category': 'Conversion', 'event_label': 'Final Download' });">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Download Kaptur for Windows
       </a>
@@ -353,7 +363,7 @@
 <footer>
   <div class="footer-inner">
     <div class="footer-brand">
-      <div class="nav-logo" style="width:22px;height:22px;border-radius:6px"><svg viewBox="0 0 24 24" fill="white" style="width:12px;height:12px"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+      <img src="public/kaptur-logo.png" alt="Kaptur" style="width:22px;height:22px;object-fit:contain;border-radius:5px">
       Kaptur
     </div>
     <div class="footer-links">
