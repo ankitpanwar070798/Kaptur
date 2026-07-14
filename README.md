@@ -183,6 +183,39 @@ npm run tauri dev
 
 ---
 
+## Development & Deployment Workflow
+
+Kaptur uses GitHub Actions for continuous integration and deployment. The entire release and distribution process is fully automated.
+
+### 1. Landing Page Deployment (GitHub Pages)
+
+The landing page (`landing.html`) is automatically deployed to GitHub Pages whenever changes are pushed to the `main` branch.
+
+- **Workflow File:** `.github/workflows/pages.yml`
+- **Trigger:** Push to `main` branch (specifically modifying `landing.html` or the `public/` folder).
+- **Process:** The workflow copies the necessary files into a `_site` directory and uses the official GitHub Pages actions to publish it.
+
+### 2. Automated App Releases (Tauri)
+
+Building the Windows installer (`.msi` and `.exe`) is handled automatically via GitHub Actions whenever you push a new version tag.
+
+- **Workflow File:** `.github/workflows/release.yml`
+- **Trigger:** Push a Git tag that starts with `v` (e.g., `v1.0.0`).
+- **Process:**
+  1. Sets up Node.js and Rust environments.
+  2. Runs `npm run build` and `tauri build`.
+  3. Automatically drafts a new GitHub Release titled with the tag version.
+  4. Uploads the generated Windows installers to the release assets.
+  5. Automatically generates a changelog based on the commit history since the last tag.
+
+**How to trigger a new release:**
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+---
+
 ## Keyboard Shortcuts
 
 | Shortcut | Action |
