@@ -87,5 +87,6 @@ Once you find the screenshot, you can interact with it instantly:
 
 We've recently introduced a seamless, automated workflow and enhanced our online presence:
 - **Automated Releases:** Kaptur now uses GitHub Actions to automatically build and publish Windows installers for every new release.
+- **Auto-Updater:** Integrated Tauri's auto-updater plugin so Kaptur can silently check for, download, and install new versions directly from GitHub Releases.
 - **Landing Page Enhancements:** The `landing.html` page has been updated with robust SEO/AEO metadata, semantic HTML, a new favicon, and a live GitHub downloads badge.
 - **Strict Privacy Check:** All third-party tracking, including Google Analytics (GA4), has been completely removed to align with our strict privacy philosophy.

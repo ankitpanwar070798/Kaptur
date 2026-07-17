@@ -46,6 +46,7 @@ Kaptur is a **Tauri 2** desktop application for Windows that watches your screen
 | Local SQLite DB | Zero-dependency, bundled SQLite via rusqlite with persisted settings |
 | Fully Offline | No network calls, no accounts, no subscriptions |
 | Dark Premium UI | Glassmorphism, tailored color palettes, smooth animations |
+| Auto-Updater | Seamless, automatic updates on startup directly via GitHub Releases |
 
 ---
 
