@@ -39,7 +39,9 @@ zip = "8.6.0"
 tauri-plugin-dialog = "2.7.1"
 windows = { version = "0.62.2", features = ["Foundation", "Foundation_Collections", "Globalization", "Graphics_Imaging", "Media_Ocr", "Storage", "Storage_Streams"] }
 tauri-plugin-drag = "2.1.1"
+tauri-plugin-process = "2"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-autostart = "2"
+tauri-plugin-updater = "2"
 

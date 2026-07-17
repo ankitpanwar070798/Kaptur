@@ -1,5 +1,7 @@
 # About Kaptur
 
+> **Website:** [https://ankitpanwar070798.github.io/Kaptur/](https://ankitpanwar070798.github.io/Kaptur/)
+>
 > Kaptur — every pixel, marked and remembered.
 
 Kaptur is a lightweight, privacy-first desktop application designed to act as a searchable, secure memory bank for your screen. It automatically organizes your screenshots, makes the text inside them instantly searchable, proactively protects your sensitive information, and lets you annotate images before sharing them.

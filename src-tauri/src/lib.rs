@@ -11,8 +11,9 @@ use std::sync::{
 };
 use std::time::SystemTime;
 use tauri::{
+    menu::{Menu, MenuItem},
     tray::{TrayIconBuilder, TrayIconEvent},
-    AppHandle, Emitter, Manager,
+    AppHandle, Emitter, Manager, WindowEvent,
 };
 use tauri_plugin_global_shortcut::GlobalShortcutExt;
 
@@ -1276,6 +1277,8 @@ pub fn run() {
     cleanup_temp_drag_files();
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_autostart::Builder::new().build())
         .plugin(tauri_plugin_drag::init())
         .plugin(tauri_plugin_dialog::init())
@@ -1283,18 +1286,29 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .plugin(
             tauri_plugin_global_shortcut::Builder::new()
-                .with_handler(|app, _shortcut, _event| {
-                    eprintln!("Hotkey pressed! Showing overlay...");
-                    if let Some(overlay) = app.get_webview_window("overlay") {
-                        let _ = overlay.show();
-                        let _ = overlay.set_focus();
-                        let _ = overlay.eval("document.getElementById('overlay-search')?.value = ''");
-                    } else {
-                        eprintln!("Overlay window not found!");
+                .with_handler(|app, _shortcut, event| {
+                    if event.state() == tauri_plugin_global_shortcut::ShortcutState::Pressed {
+                        eprintln!("Hotkey pressed! Showing overlay...");
+                        if let Some(overlay) = app.get_webview_window("overlay") {
+                            let _ = overlay.show();
+                            let _ = overlay.set_focus();
+                            let _ = overlay.eval("document.getElementById('overlay-search')?.value = ''");
+                        } else {
+                            eprintln!("Overlay window not found!");
+                        }
                     }
                 })
                 .build(),
         )
+        .on_window_event(|window, event| match event {
+            WindowEvent::CloseRequested { api, .. } => {
+                if window.label() == "main" || window.label() == "overlay" {
+                    let _ = window.hide();
+                    api.prevent_close();
+                }
+            }
+            _ => {}
+        })
         .setup(|app| {
             // Check Windows Native OCR availability first
             let ocr_available = is_native_ocr_supported(Some(app.handle()));
@@ -1364,12 +1378,27 @@ pub fn run() {
                 scan_existing_screenshots(all_folders, db.clone(), app.handle().clone());
             }
 
+            let quit_i = MenuItem::with_id(app, "quit", "Quit Kaptur", true, None::<&str>).unwrap();
+            let show_i = MenuItem::with_id(app, "show", "Show Kaptur", true, None::<&str>).unwrap();
+            let menu = Menu::with_items(app, &[&show_i, &quit_i]).unwrap();
+
             let app_handle_for_tray = app.handle().clone();
             let app_handle_for_build = app_handle_for_tray.clone();
             let _ = TrayIconBuilder::new()
                 .icon(app.default_window_icon().unwrap().clone())
+                .menu(&menu)
+                .on_menu_event(move |app, event| {
+                    if event.id.as_ref() == "quit" {
+                        app.exit(0);
+                    } else if event.id.as_ref() == "show" {
+                        if let Some(main) = app.get_webview_window("main") {
+                            let _ = main.show();
+                            let _ = main.set_focus();
+                        }
+                    }
+                })
                 .on_tray_icon_event(move |_tray, event| match event {
-                    TrayIconEvent::Click { button: _, .. } | TrayIconEvent::DoubleClick { button: _, .. } => {
+                    TrayIconEvent::DoubleClick { .. } => {
                         if let Some(main) = app_handle_for_tray.get_webview_window("main") {
                             let _ = main.show();
                             let _ = main.set_focus();

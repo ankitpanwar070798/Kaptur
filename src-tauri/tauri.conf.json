@@ -57,6 +57,12 @@
     "shell": {
       "open": true
     },
-    "globalShortcut": "all"
+    "globalShortcut": "all",
+    "updater": {
+      "endpoints": [
+        "https://github.com/ankitpanwar070798/Kaptur/releases/latest/download/latest.json"
+      ],
+      "pubkey": "YOUR_PUBLIC_KEY_HERE"
+    }
   }
 }

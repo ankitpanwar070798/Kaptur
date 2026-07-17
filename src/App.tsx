@@ -7,6 +7,8 @@ import "./App.css";
 import kapturLogo from "./assets/kaptur-logo.png";
 import { enable, isEnabled, disable } from '@tauri-apps/plugin-autostart';
 import { openUrl } from '@tauri-apps/plugin-opener';
+import { check } from '@tauri-apps/plugin-updater';
+import { relaunch } from '@tauri-apps/plugin-process';
 
 /* ── Types ──────────────────────────────────────────────── */
 import { generateProtectedBase64, startImageDrag } from "./utils/imageExport";
@@ -1284,6 +1286,25 @@ function App() {
   /* ── Init: check onboarding ─────────────────────────── */
   useEffect(() => { checkOnboarding(); }, []);
 
+  /* ── Init: check for updates ────────────────────────── */
+  useEffect(() => {
+    async function checkForUpdates() {
+      try {
+        const update = await check();
+        if (update) {
+          console.log(`found update ${update.version}`);
+          await update.downloadAndInstall();
+          await relaunch();
+        }
+      } catch (err) {
+        console.error("Failed to check for updates:", err);
+      }
+    }
+    if (onboardingDone && !isOverlay) {
+      checkForUpdates();
+    }
+  }, [onboardingDone, isOverlay]);
+
   /* ── Listen: show-main-window ───────────────────────── */
   useEffect(() => {
     let cleanup: Promise<() => void> | null = null;
@@ -1301,7 +1322,7 @@ function App() {
     let cleanup: Promise<() => void> | null = null;
     try {
       cleanup = listen("screenshots-updated", () => {
-        if (isOverlay) loadOverlayDays(2); else loadScreenshots();
+        if (isOverlay && filterMode !== 'favorites') loadOverlayDays(2); else loadScreenshots();
       });
     } catch {}
     return () => { if (cleanup) cleanup.then(f => f()); };
@@ -1335,7 +1356,7 @@ function App() {
     if (debouncedQuery.trim()) {
       handleSearch(debouncedQuery);
     } else {
-      if (isOverlay) loadOverlayDays(2); else loadScreenshots(false);
+      if (isOverlay && filterMode !== 'favorites') loadOverlayDays(2); else loadScreenshots(false);
     }
   }, [debouncedQuery, sortOrder, filterMode, onboardingDone, isOverlay]);
 
@@ -1668,7 +1689,7 @@ function App() {
 
   async function handleSearch(q: string) {
     if (!q.trim()) {
-      if (isOverlay) loadOverlayDays(2); else loadScreenshots(false);
+      if (isOverlay && filterMode !== 'favorites') loadOverlayDays(2); else loadScreenshots(false);
       return;
     }
     try {
@@ -1756,7 +1777,7 @@ function App() {
       setContextMenu(null);
       // Reload after a short delay to let OCR complete
       setTimeout(() => {
-        if (isOverlay) loadOverlayDays(2); else loadScreenshots(false);
+        if (isOverlay && filterMode !== 'favorites') loadOverlayDays(2); else loadScreenshots(false);
       }, 2000);
     } catch (e) {
       console.error("Reprocess failed:", e);
@@ -1770,7 +1791,7 @@ function App() {
       setReprocessingCount(count);
       // Reload after a delay
       setTimeout(() => {
-        if (isOverlay) loadOverlayDays(2); else loadScreenshots(false);
+        if (isOverlay && filterMode !== 'favorites') loadOverlayDays(2); else loadScreenshots(false);
         setReprocessingCount(null);
       }, 3000);
     } catch (e) {
@@ -1888,7 +1909,7 @@ function App() {
       }
       setShowSettings(false);
       // Reload screenshots from new folder
-      if (isOverlay) loadOverlayDays(2); else loadScreenshots();
+      if (isOverlay && filterMode !== 'favorites') loadOverlayDays(2); else loadScreenshots();
     } catch (e) {
       console.error("Failed to save settings:", e);
       alert("Failed to save settings: " + (e as Error).message);
@@ -2122,6 +2143,7 @@ function App() {
                 <option value="all">All Screenshots</option>
                 <option value="has_text">Searchable (Has Text)</option>
                 <option value="no_text">No Text / OCR Failed</option>
+                <option value="favorites">Wishlist (Favorites)</option>
               </select>
               <button
                 className={`wishlist-btn ${filterMode === 'favorites' ? 'active' : ''}`}
