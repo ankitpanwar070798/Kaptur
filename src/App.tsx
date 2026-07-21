@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { confirm } from "@tauri-apps/plugin-dialog";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { listen, Event as TauriEvent } from "@tauri-apps/api/event";
 import { open } from "@tauri-apps/plugin-dialog";
@@ -282,6 +283,9 @@ function ScreenshotCard({
   onContextMenu,
   onToggleFavorite,
   regionRefreshTrigger,
+  selectable,
+  selected,
+  onSelect,
 }: {
   screenshot: Screenshot;
   onOpen: () => void;
@@ -290,6 +294,9 @@ function ScreenshotCard({
   onContextMenu: (e: React.MouseEvent) => void;
   onToggleFavorite?: (e: React.MouseEvent) => void;
   regionRefreshTrigger?: number;
+  selectable?: boolean;
+  selected?: boolean;
+  onSelect?: (selected: boolean) => void;
 }) {
   const needsIndicator = screenshot.ocr_status === "pending" ||
     screenshot.ocr_status === "failed" ||
@@ -299,6 +306,21 @@ function ScreenshotCard({
   const [regions, setRegions] = useState<SensitiveRegion[]>([]);
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
   const [thumbnailSrc, setThumbnailSrc] = useState<string>('');
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    if (selectable && onSelect) {
+      e.preventDefault();
+      e.stopPropagation();
+      onSelect(!selected);
+    } else {
+      onOpen();
+    }
+  };
+
+  const handleDragStart = (e: React.DragEvent) => {
+    e.preventDefault();
+    startImageDrag(screenshot.path, `Protected_${basename(screenshot.path)}.png`, regions, annotations);
+  };
 
   // Re-fetch regions and annotations whenever regionRefreshTrigger increments
   useEffect(() => {
@@ -316,21 +338,29 @@ function ScreenshotCard({
 
   return (
     <div
-      className="screenshot-card"
-      onClick={onOpen}
+      className={`screenshot-card ${selectable ? 'selectable' : ''} ${selected ? 'selected' : ''}`}
+      onClick={handleCardClick}
       onContextMenu={onContextMenu}
-      draggable={true}
-      onDragStart={(e) => {
-        e.preventDefault();
-        startImageDrag(screenshot.path, `Protected_${basename(screenshot.path)}.png`, regions, annotations);
-      }}
+      draggable={!selectable}
+      onDragStart={!selectable ? handleDragStart : undefined}
     >
+      {selectable && (
+        <div className="card-checkbox" onClick={(e) => { e.stopPropagation(); onSelect?.(!selected); }}>
+          {selected && (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          )}
+        </div>
+      )}
       {/* Quick action buttons that appear on hover */}
-      <div className="quick-actions" onClick={(e) => e.stopPropagation()}>
-        <button className="quick-btn" onClick={onOpen} title="Open">Open</button>
-        <button className="quick-btn" onClick={onCopy} title="Copy">Copy</button>
-        <button className="quick-btn" onClick={onReveal} title="Show in Explorer">Show</button>
-      </div>
+      {!selectable && (
+        <div className="quick-actions" onClick={(e) => e.stopPropagation()}>
+          <button className="quick-btn" onClick={onOpen} title="Open">Open</button>
+          <button className="quick-btn" onClick={onCopy} title="Copy">Copy</button>
+          <button className="quick-btn" onClick={onReveal} title="Show in Explorer">Show</button>
+        </div>
+      )}
 
       {/* OCR status indicator */}
       {needsIndicator && (
@@ -1226,7 +1256,10 @@ function App() {
   const [isOverlay, setIsOverlay] = useState(false);
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
   const [filterMode, setFilterMode] = useState<"all" | "has_text" | "no_text" | "favorites">("all");
-
+  
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedPaths, setSelectedPaths] = useState<Set<string>>(new Set());
+  const [showSelectMenu, setShowSelectMenu] = useState(false);
 
   const [contextMenu, setContextMenu] = useState<{
     x: number; y: number; screenshot: Screenshot;
@@ -1322,7 +1355,7 @@ function App() {
     let cleanup: Promise<() => void> | null = null;
     try {
       cleanup = listen("screenshots-updated", () => {
-        if (isOverlay && filterMode !== 'favorites') loadOverlayDays(2); else loadScreenshots();
+        loadScreenshots();
       });
     } catch {}
     return () => { if (cleanup) cleanup.then(f => f()); };
@@ -1356,7 +1389,7 @@ function App() {
     if (debouncedQuery.trim()) {
       handleSearch(debouncedQuery);
     } else {
-      if (isOverlay && filterMode !== 'favorites') loadOverlayDays(2); else loadScreenshots(false);
+      loadScreenshots(false);
     }
   }, [debouncedQuery, sortOrder, filterMode, onboardingDone, isOverlay]);
 
@@ -1373,13 +1406,14 @@ function App() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape" && isOverlay) {
+        if (previewImage) return; // Let the modal close itself
         invoke("hide_overlay_window");
         setContextMenu(null);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [isOverlay]);
+  }, [isOverlay, previewImage]);
 
   /* ── Data functions ──────────────────────────────────── */
   async function checkOnboarding() {
@@ -1464,14 +1498,7 @@ function App() {
     } catch (e) { console.error("Load failed:", e); }
   }, [cursor, ITEMS_PER_PAGE, sortOrder, filterMode]);
 
-  const loadOverlayDays = useCallback(async (days: number) => {
-    try {
-      const results = await invoke<Screenshot[]>("get_screenshots_by_days", { days });
-      setScreenshots(results);
-      setCursor(null);
-      setHasMore(false); // No pagination for overlay
-    } catch (e) { console.error("Load by days failed:", e); }
-  }, []);
+
 
   // ── Preview Modal Functions ───────────────────────────────────
   async function openPreviewModal(screenshot: Screenshot) {
@@ -1689,7 +1716,7 @@ function App() {
 
   async function handleSearch(q: string) {
     if (!q.trim()) {
-      if (isOverlay && filterMode !== 'favorites') loadOverlayDays(2); else loadScreenshots(false);
+      loadScreenshots(false);
       return;
     }
     try {
@@ -1766,10 +1793,50 @@ function App() {
   }
 
   const handleContextMenu = (e: React.MouseEvent, screenshot: Screenshot) => {
+    if (isSelectionMode) return; // Disable context menu in selection mode
     e.preventDefault();
     e.stopPropagation();
     setContextMenu({ x: e.clientX, y: e.clientY, screenshot });
   };
+
+  async function handleDeleteSingle(path: string) {
+    const confirmed = await confirm(
+      "Are you sure you want to permanently delete this screenshot? It will be removed from your hard drive.",
+      { title: "Confirm Delete", kind: "warning" }
+    );
+    if (!confirmed) return;
+    try {
+      await invoke("delete_screenshots", { paths: [path] });
+    } catch (e) {
+      console.error("Failed to delete screenshot:", e);
+      alert("Failed to delete screenshot.");
+    }
+    setContextMenu(null);
+  }
+
+  async function handleDeleteSelected() {
+    if (selectedPaths.size === 0) return;
+    const confirmed = await confirm(
+      `Are you sure you want to permanently delete ${selectedPaths.size} screenshot(s)? They will be removed from your hard drive.`,
+      { title: "Confirm Bulk Delete", kind: "warning" }
+    );
+    if (!confirmed) return;
+    try {
+      await invoke("delete_screenshots", { paths: Array.from(selectedPaths) });
+      setIsSelectionMode(false);
+      setSelectedPaths(new Set());
+    } catch (e) {
+      console.error("Failed to delete screenshots:", e);
+      alert("Failed to delete screenshots.");
+    }
+  }
+
+  function toggleSelection(path: string) {
+    const next = new Set(selectedPaths);
+    if (next.has(path)) next.delete(path);
+    else next.add(path);
+    setSelectedPaths(next);
+  }
 
   async function reprocessScreenshot(id: string) {
     try {
@@ -1777,7 +1844,7 @@ function App() {
       setContextMenu(null);
       // Reload after a short delay to let OCR complete
       setTimeout(() => {
-        if (isOverlay && filterMode !== 'favorites') loadOverlayDays(2); else loadScreenshots(false);
+        loadScreenshots(false);
       }, 2000);
     } catch (e) {
       console.error("Reprocess failed:", e);
@@ -1791,7 +1858,7 @@ function App() {
       setReprocessingCount(count);
       // Reload after a delay
       setTimeout(() => {
-        if (isOverlay && filterMode !== 'favorites') loadOverlayDays(2); else loadScreenshots(false);
+        loadScreenshots(false);
         setReprocessingCount(null);
       }, 3000);
     } catch (e) {
@@ -1909,7 +1976,7 @@ function App() {
       }
       setShowSettings(false);
       // Reload screenshots from new folder
-      if (isOverlay && filterMode !== 'favorites') loadOverlayDays(2); else loadScreenshots();
+      loadScreenshots();
     } catch (e) {
       console.error("Failed to save settings:", e);
       alert("Failed to save settings: " + (e as Error).message);
@@ -1971,7 +2038,7 @@ function App() {
                 checked={autoStart}
                 onChange={(e) => setAutoStart(e.target.checked)}
               />
-              Launch on startup
+              Start Kaptur on boot
             </label>
           </div>
 
@@ -1983,7 +2050,7 @@ function App() {
     );
   } else {
     content = (
-      <div className={`container ${isOverlay ? 'overlay-mode' : ''}`}
+      <div className={`container ${isOverlay ? 'overlay' : ''}`}
         onClick={isOverlay ? (e) => {
           if (e.target === e.currentTarget) invoke("hide_overlay_window");
         } : undefined}
@@ -2094,70 +2161,118 @@ function App() {
           >✕</button>
         </div>
       )}
-
-      {/* ── Page content ── */}
-      <div className="page-content">
-
-        {/* Overlay search bar */}
-        {isOverlay && (
-          <div className="header-search" style={{ marginBottom: "1rem", maxWidth: "100%" }}>
-            <svg className="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="11" cy="11" r="8" />
-              <path d="M21 21l-4.35-4.35" />
-            </svg>
-            <input
-              autoFocus
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search screenshots…"
-            />
-            {searchQuery && (
-              <button className="search-clear" onClick={() => setSearchQuery("")}>✕</button>
-            )}
-          </div>
-        )}
-
-
-
         {/* ── Secondary Toolbar (Sort & Filter) ── */}
         <div className="view-controls">
           <div className="view-controls-left">
-            {/* We could put title or stats here */}
+            {isOverlay && (
+              <div className="header-search overlay-search-collapse">
+                <svg className="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="M21 21l-4.35-4.35" />
+                </svg>
+                <input
+                  id="overlay-search"
+                  autoFocus
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search screenshots…"
+                />
+                {searchQuery && (
+                  <button className="search-clear" onClick={() => setSearchQuery("")}>✕</button>
+                )}
+              </div>
+            )}
           </div>
           <div className="view-controls-right">
             <div className="header-filters">
-              <select
-                value={sortOrder}
-                onChange={(e) => setSortOrder(e.target.value as "newest" | "oldest")}
-                className="filter-select"
-              >
-                <option value="newest">Newest First</option>
-                <option value="oldest">Oldest First</option>
-              </select>
-              <select
-                value={filterMode}
-                onChange={(e) => setFilterMode(e.target.value as "all" | "has_text" | "no_text" | "favorites")}
-                className="filter-select"
-              >
-                <option value="all">All Screenshots</option>
-                <option value="has_text">Searchable (Has Text)</option>
-                <option value="no_text">No Text / OCR Failed</option>
-                <option value="favorites">Wishlist (Favorites)</option>
-              </select>
-              <button
-                className={`wishlist-btn ${filterMode === 'favorites' ? 'active' : ''}`}
-                onClick={() => setFilterMode(filterMode === 'favorites' ? 'all' : 'favorites')}
-                title={filterMode === 'favorites' ? 'Show all screenshots' : 'Show Wishlist (Favorites)'}
-              >
-                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill={filterMode === 'favorites' ? 'currentColor' : 'none'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                </svg>
-                Wishlist
-              </button>
+              {isSelectionMode ? (
+                <div className="bulk-action-bar">
+                  <span className="selected-count">{selectedPaths.size} selected</span>
+                  <button
+                    className="icon-btn"
+                    onClick={() => {
+                      if (selectedPaths.size === screenshots.length && screenshots.length > 0) {
+                        setSelectedPaths(new Set()); // Unselect all
+                      } else {
+                        const allPaths = screenshots.map(s => s.path);
+                        const next = new Set(selectedPaths);
+                        allPaths.forEach(p => next.add(p));
+                        setSelectedPaths(next); // Select all
+                      }
+                    }}
+                    title={selectedPaths.size === screenshots.length && screenshots.length > 0 ? "Unselect All" : "Select All"}
+                  >
+                    {selectedPaths.size === screenshots.length && screenshots.length > 0 ? "Unselect All" : "Select All"}
+                  </button>
+                  <button
+                    className="icon-btn delete-btn"
+                    onClick={handleDeleteSelected}
+                    disabled={selectedPaths.size === 0}
+                    title="Delete Selected"
+                  >
+                    Delete
+                  </button>
+                  <button
+                    className="icon-btn cancel-btn"
+                    onClick={() => {
+                      setIsSelectionMode(false);
+                      setSelectedPaths(new Set());
+                    }}
+                    title="Cancel Selection"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <select
+                    value={sortOrder}
+                    onChange={(e) => setSortOrder(e.target.value as "newest" | "oldest")}
+                    className="filter-select"
+                  >
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                  </select>
+                  <select
+                    value={filterMode}
+                    onChange={(e) => setFilterMode(e.target.value as "all" | "has_text" | "no_text" | "favorites")}
+                    className="filter-select"
+                  >
+                    <option value="all">All Screenshots</option>
+                    <option value="has_text">Searchable (Has Text)</option>
+                    <option value="no_text">No Text / OCR Failed</option>
+                    <option value="favorites">Wishlist (Favorites)</option>
+                  </select>
+                  <button
+                    className={`wishlist-btn ${filterMode === 'favorites' ? 'active' : ''}`}
+                    onClick={() => setFilterMode(filterMode === 'favorites' ? 'all' : 'favorites')}
+                    title={filterMode === 'favorites' ? 'Show all screenshots' : 'Show Wishlist (Favorites)'}
+                  >
+                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill={filterMode === 'favorites' ? 'currentColor' : 'none'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                    </svg>
+                    Wishlist
+                  </button>
+                  <button
+                    className="icon-btn"
+                    onClick={() => setIsSelectionMode(true)}
+                    title="Select screenshots"
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="9 11 12 14 22 4"></polyline>
+                      <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                    </svg>
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
+      {/* ── Page content ── */}
+      <div className="page-content">
+
+
 
         {/* Search results header */}
         {isSearching && (
@@ -2214,6 +2329,9 @@ function App() {
                       onContextMenu={(e) => handleContextMenu(e, s)}
                       onToggleFavorite={(e) => handleToggleFavorite(e, s)}
                       regionRefreshTrigger={regionRefreshTrigger}
+                      selectable={isSelectionMode}
+                      selected={selectedPaths.has(s.path)}
+                      onSelect={() => toggleSelection(s.path)}
                     />
                   ))}
                 </div>
@@ -2230,12 +2348,15 @@ function App() {
                 <ScreenshotCard
                   key={s.id}
                   screenshot={s}
-                  onOpen={() => invoke("open_screenshot", { path: s.path })}
+                  onOpen={() => openPreviewFromPath(s.path)}
                   onCopy={() => copyToClipboard(s.path)}
-                  onReveal={() => invoke("reveal_in_explorer", { path: s.path })}
+                  onReveal={() => revealInExplorer(s.path)}
                   onContextMenu={(e) => handleContextMenu(e, s)}
                   onToggleFavorite={(e) => handleToggleFavorite(e, s)}
                   regionRefreshTrigger={regionRefreshTrigger}
+                  selectable={isSelectionMode}
+                  selected={selectedPaths.has(s.path)}
+                  onSelect={() => toggleSelection(s.path)}
                 />
               ))}
             </div>
@@ -2292,6 +2413,15 @@ function App() {
               Reprocess OCR
             </button>
           )}
+          <button onClick={() => handleDeleteSingle(contextMenu.screenshot.path)} className="delete-context-btn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              <line x1="10" y1="11" x2="10" y2="17"></line>
+              <line x1="14" y1="11" x2="14" y2="17"></line>
+            </svg>
+            Delete
+          </button>
         </div>
       )}
 
@@ -2389,7 +2519,7 @@ function App() {
                     checked={settingsAutoStart}
                     onChange={(e) => setSettingsAutoStart(e.target.checked)}
                   />
-                  Launch Kaptur on startup
+                  Start Kaptur on boot
                 </label>
               </div>
 

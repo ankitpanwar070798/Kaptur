@@ -79,6 +79,7 @@ Once you find the screenshot, you can interact with it instantly:
 - Click **Save Protected Copy** to export a safe version of the image.
 - Click **Reveal in Explorer** to open the actual file location.
 - Click the **Heart Icon** on any card to add it to Favorites.
+- **Bulk Delete:** Click the Select icon to reveal the dynamic Bulk Action Bar. From here, you can quickly select and permanently delete multiple unwanted screenshots from both the UI and your hard drive in one click, backed by a native confirmation dialog.
 - **Bulk Export:** Export your entire database into a single `.zip` file from the Settings panel.
 
 ---

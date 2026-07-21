@@ -40,6 +40,7 @@ Kaptur is a **Tauri 2** desktop application for Windows that watches your screen
 | Drag-and-Drop Sharing | Drag thumbnails or full previews directly into chat apps, email clients, or browser upload fields — the protected (blurred + annotated) version is always sent |
 | Export & Copy | Copy images or Save a Protected Copy as a permanent PNG with all protections baked in |
 | Wishlist (Favorites) | Heart any screenshot to add it to your Wishlist; one-click filter button to view only favorited screenshots |
+| Bulk Delete | Click the Select icon to reveal the dynamic Bulk Action Bar to quickly select and permanently delete multiple screenshots |
 | Multi-Folder Watch | Add multiple folders to watch from Settings |
 | Bulk Export | Export your entire vault as a ZIP file from Settings |
 | Context Menu | Right-click to Reprocess OCR, Copy Image, or Reveal in Explorer |

@@ -27,7 +27,7 @@ use database::{Cursor, Database, OcrStatus, SensitiveRegion};
 // Global flag for Windows Native OCR availability
 static NATIVE_OCR_AVAILABLE: AtomicBool = AtomicBool::new(false);
 
-// ── Structs ──────────────────────────────────────────────────
+// â”€â”€ Structs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 #[derive(Debug, Serialize, Deserialize)]
 struct OnboardingConfig {
@@ -45,7 +45,7 @@ struct OcrResult {
     text: String,
 }
 
-// ── Tauri commands ───────────────────────────────────────────
+// â”€â”€ Tauri commands â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 #[tauri::command]
 async fn get_onboarding_config(
@@ -150,7 +150,7 @@ async fn set_intro_seen(
     Ok(())
 }
 
-// ── Pro Features ──────────────────────────────────────────────
+// â”€â”€ Pro Features â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 #[tauri::command]
 async fn activate_license_key(
@@ -371,6 +371,36 @@ async fn open_screenshot(path: String) -> Result<(), String> {
 }
 
 #[tauri::command]
+async fn delete_screenshots(
+    paths: Vec<String>,
+    db: tauri::State<'_, Arc<Mutex<Database>>>,
+    app_handle: tauri::AppHandle,
+) -> Result<(), String> {
+    let db_lock = db
+        .lock()
+        .map_err(|e| format!("Database lock error: {}", e))?;
+    
+    for path in paths {
+        // 1. Delete from OS file system
+        let path_obj = std::path::Path::new(&path);
+        if path_obj.exists() {
+            if let Err(e) = std::fs::remove_file(path_obj) {
+                eprintln!("Failed to delete physical file {}: {}", path, e);
+            }
+        }
+        
+        // 2. Delete from DB
+        if let Err(e) = db_lock.delete_screenshot_by_path(&path) {
+            eprintln!("Failed to delete screenshot from DB {}: {}", path, e);
+        }
+    }
+    
+    // 3. Emit event to refresh UI
+    let _ = app_handle.emit("screenshots-updated", ());
+    Ok(())
+}
+
+#[tauri::command]
 async fn read_image_as_base64(path: String) -> Result<String, String> {
     let data = tokio::fs::read(&path)
         .await
@@ -504,7 +534,7 @@ fn toggle_favorite(
     db_guard.toggle_favorite(&id, is_favorite)
 }
 
-// ── Thumbnail commands ───────────────────────────────────────
+// â”€â”€ Thumbnail commands â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /// Get the system cache directory for thumbnails.
 fn get_thumbnails_cache_dir() -> Result<PathBuf, String> {
@@ -555,7 +585,7 @@ fn generate_thumbnail(path: &Path, hash: &str) -> Result<PathBuf, String> {
 async fn get_or_generate_thumbnail(hash: String, path: String) -> Result<String, String> {
     let path_buf = PathBuf::from(&path);
 
-    // Cache-invalidation: original file gone → tell the frontend gracefully
+    // Cache-invalidation: original file gone â†’ tell the frontend gracefully
     if !path_buf.exists() {
         return Err("file_not_found".to_string());
     }
@@ -574,7 +604,7 @@ async fn get_or_generate_thumbnail(hash: String, path: String) -> Result<String,
     Ok(format!("data:image/jpeg;base64,{}", encoded))
 }
 
-// ── Overlay commands ─────────────────────────────────────────
+// â”€â”€ Overlay commands â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 #[tauri::command]
 async fn show_overlay_window(app: AppHandle) -> Result<(), String> {
@@ -683,7 +713,7 @@ async fn reveal_in_explorer(path: String) -> Result<(), String> {
     Ok(())
 }
 
-// ── Sensitive-region commands ────────────────────────────────
+// â”€â”€ Sensitive-region commands â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 #[tauri::command]
 async fn get_sensitive_regions(
@@ -796,7 +826,7 @@ async fn delete_annotation(
         .map_err(|e| format!("Database error: {}", e))
 }
 
-// ── App entry point ───────────────────────────────────────────
+// â”€â”€ App entry point â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 fn compute_hash(path: &Path) -> Result<String, String> {
     let contents = std::fs::read(path).map_err(|e| format!("Failed to read file: {}", e))?;
@@ -884,7 +914,7 @@ fn run_ocr_with_boxes(path: &Path, _app: Option<&tauri::AppHandle>) -> Result<Oc
     })
 }
 
-// ── Processing pipeline ───────────────────────────────────────
+// â”€â”€ Processing pipeline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 fn process_screenshot(path: PathBuf, db: Arc<Mutex<Database>>, app_handle: AppHandle) {
     println!("Processing screenshot: {:?}", path);
@@ -1269,7 +1299,7 @@ async fn generate_temp_drag_file(
     Ok(file_path.to_string_lossy().into_owned())
 }
 
-// ── App entry point ───────────────────────────────────────────
+// â”€â”€ App entry point â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -1279,7 +1309,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
-        .plugin(tauri_plugin_autostart::Builder::new().build())
+        .plugin(tauri_plugin_autostart::Builder::new().arg("--autostart").build())
         .plugin(tauri_plugin_drag::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
@@ -1310,6 +1340,14 @@ pub fn run() {
             _ => {}
         })
         .setup(|app| {
+            // If the app was not launched by the OS autostart, show the main window.
+            let args: Vec<String> = std::env::args().collect();
+            if !args.contains(&"--autostart".to_string()) {
+                if let Some(main_window) = app.get_webview_window("main") {
+                    let _ = main_window.show();
+                }
+            }
+
             // Check Windows Native OCR availability first
             let ocr_available = is_native_ocr_supported(Some(app.handle()));
             NATIVE_OCR_AVAILABLE.store(ocr_available, Ordering::Relaxed);
@@ -1442,6 +1480,7 @@ pub fn run() {
             get_annotations,
             add_annotation,
             delete_annotation,
+            delete_screenshots,
             activate_license_key,
             get_is_pro_active,
             get_watch_folders,
@@ -1455,3 +1494,4 @@ pub fn run() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
+
