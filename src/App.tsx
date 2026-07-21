@@ -1259,7 +1259,7 @@ function App() {
   
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedPaths, setSelectedPaths] = useState<Set<string>>(new Set());
-  const [showSelectMenu, setShowSelectMenu] = useState(false);
+
 
   const [contextMenu, setContextMenu] = useState<{
     x: number; y: number; screenshot: Screenshot;
